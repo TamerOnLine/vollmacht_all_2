@@ -1,0 +1,20 @@
+{
+  "app.title": "طلب تغيير عنوان السكن",
+  "section.person": "بيانات الشخص",
+  "person.name": "الاسم، الكنية",
+  "person.geb": "تاريخ الميلاد",
+  "person.id_number": "رقم بطاقة الهوية",
+  "person.customer_number": "رقم العميل",
+  "person.alt_addr": "العنوان السابق",
+  "person.neu_addr": "العنوان الجديد",
+  "person.reason": "سبب التغيير",
+  "field.ort": "المدينة",
+  "field.datum": "التاريخ",
+  "btn.create": "إنشاء PDF",
+  "msg.created": "تم إنشاء PDF.",
+  "btn.download": "تحميل تغيير العنوان.pdf",
+  "signature.title": "توقيع مقدم الطلب",
+  "signature.official": "توقيع / ختم الجهة الرسمية",
+  "validation.required": "يرجى ملء جميع الحقول المطلوبة.",
+  "declaration.text": "أقر بأن المعلومات المقدمة كاملة وصحيحة."
+}

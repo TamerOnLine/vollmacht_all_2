@@ -1,0 +1,20 @@
+{
+  "app.title": "Change of Residence Application",
+  "section.person": "Personal Information",
+  "person.name": "Name, Surname",
+  "person.geb": "Date of Birth",
+  "person.id_number": "ID Card Number",
+  "person.customer_number": "Customer Number",
+  "person.alt_addr": "Previous Address",
+  "person.neu_addr": "New Address",
+  "person.reason": "Reason for Change",
+  "field.ort": "City",
+  "field.datum": "Date",
+  "btn.create": "Create PDF",
+  "msg.created": "PDF created.",
+  "btn.download": "Download ResidenceChange.pdf",
+  "signature.title": "Applicant's Signature",
+  "signature.official": "Official Signature / Stamp",
+  "validation.required": "Please fill in all required fields.",
+  "declaration.text": "I hereby confirm that the information provided is complete and correct."
+}
