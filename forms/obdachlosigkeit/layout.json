@@ -1,0 +1,36 @@
+{
+  "pagesize": "A4",
+  "draw_boxes": true,
+  "fields": [
+    {
+      "name": "person_name",
+      "label_i18n": "person.name",
+      "type": "text",
+      "page": 1,
+      "x": 330,
+      "y": 750,
+      "w": 200,
+      "h": 16
+    },
+    {
+      "name": "erst_gruende",
+      "label_i18n": "erst.gruende",
+      "type": "textarea",
+      "page": 1,
+      "x": 330,
+      "y": 560,
+      "w": 200,
+      "h": 70
+    },
+    {
+      "name": "erst_checked",
+      "label_i18n": "option.checked",
+      "type": "checkbox",
+      "page": 1,
+      "x": 520,
+      "y": 645,
+      "w": 12,
+      "h": 12
+    }
+  ]
+}
