@@ -1,36 +1,52 @@
 {
   "pagesize": "A4",
-  "draw_boxes": true,
+  "draw_boxes": false,
+  "backgrounds": [],
+  "fill_rgb": [1, 1, 1],
   "fields": [
-    {
-      "name": "person_name",
-      "label_i18n": "person.name",
-      "type": "text",
-      "page": 1,
-      "x": 330,
-      "y": 750,
-      "w": 200,
-      "h": 16
-    },
-    {
-      "name": "erst_gruende",
-      "label_i18n": "erst.gruende",
-      "type": "textarea",
-      "page": 1,
-      "x": 330,
-      "y": 560,
-      "w": 200,
-      "h": 70
-    },
-    {
-      "name": "erst_checked",
-      "label_i18n": "option.checked",
-      "type": "checkbox",
-      "page": 1,
-      "x": 520,
-      "y": 645,
-      "w": 12,
-      "h": 12
-    }
+    { "type": "label", "text_i18n": "app.title", "page": 1, "x": 40, "y": 806, "size": 16, "bold": true },
+
+    { "type": "label", "text_i18n": "person.name", "page": 1, "x": 46, "y": 772, "size": 10 },
+    { "type": "label", "text_i18n": "person.geb",  "page": 1, "x": 266, "y": 772, "size": 10 },
+    { "type": "label", "text": "Angehörige",       "page": 1, "x": 386, "y": 772, "size": 10 },
+
+    { "name": "person_name", "label_i18n": "person.name", "type": "text", "page": 1, "x": 46,  "y": 740, "w": 208, "h": 16, "value_from": "person_name" },
+    { "name": "person_geb",  "label_i18n": "person.geb",  "type": "text", "page": 1, "x": 266, "y": 740, "w": 108, "h": 16, "value_from": "person_geb" },
+
+    { "name": "person_no_relatives", "type": "checkbox", "page": 1, "x": 386, "y": 748, "w": 12, "h": 12, "checked": false },
+    { "type": "label", "text": "keine Angehörige", "page": 1, "x": 404, "y": 750, "size": 10 },
+    { "name": "person_has_relatives", "type": "checkbox", "page": 1, "x": 386, "y": 724, "w": 12, "h": 12, "checked_from": "person_has_relatives" },
+    { "type": "label", "text_i18n": "person.has_relatives", "page": 1, "x": 404, "y": 726, "size": 10 },
+    { "name": "person_relatives_text", "label_i18n": "person.relatives_text", "type": "text", "page": 1, "x": 386, "y": 704, "w": 168, "h": 16, "value_from": "person_relatives_text" },
+
+    { "name": "erst_checked",  "type": "checkbox", "page": 1, "x": 40, "y": 676, "w": 12, "h": 12, "checked_from": "erst_checked" },
+    { "type": "label", "text_i18n": "section.erst", "page": 1, "x": 58, "y": 678, "size": 11, "bold": true },
+    { "type": "label", "text_i18n": "erst.gruende", "page": 1, "x": 40, "y": 660, "size": 10 },
+    { "name": "erst_gruende", "type": "textarea", "page": 1, "x": 44, "y": 584, "w": 512, "h": 62, "value_from": "erst_gruende" },
+
+    { "name": "unterb_checked", "type": "checkbox", "page": 1, "x": 40, "y": 548, "w": 12, "h": 12, "checked_from": "unterb_checked" },
+    { "type": "label", "text_i18n": "section.unterb", "page": 1, "x": 58, "y": 550, "size": 11, "bold": true },
+    { "type": "label", "text_i18n": "unterb.gruende", "page": 1, "x": 40, "y": 532, "size": 10 },
+    { "name": "unterb_gruende", "type": "textarea", "page": 1, "x": 44, "y": 456, "w": 512, "h": 62, "value_from": "unterb_gruende" },
+
+    { "name": "verl_checked", "type": "checkbox", "page": 1, "x": 40, "y": 420, "w": 12, "h": 12, "checked_from": "verl_checked" },
+    { "type": "label", "text_i18n": "section.verl", "page": 1, "x": 58, "y": 422, "size": 11, "bold": true },
+    { "type": "label", "text_i18n": "verl.endet_am", "page": 1, "x": 40, "y": 404, "size": 10 },
+    { "name": "verl_endet_am", "type": "text", "page": 1, "x": 362, "y": 394, "w": 146, "h": 12, "value_from": "verl_endet_am" },
+    { "type": "label", "text": "Es ist mir nicht gelungen, eine Wohnung anzumieten oder woanders unterzukommen.", "page": 1, "x": 40, "y": 374, "size": 10 },
+
+    { "name": "wechsel_checked", "type": "checkbox", "page": 1, "x": 40, "y": 350, "w": 12, "h": 12, "checked_from": "wechsel_checked" },
+    { "type": "label", "text_i18n": "section.wechsel", "page": 1, "x": 58, "y": 352, "size": 11, "bold": true },
+    { "type": "label", "text_i18n": "wechsel.gruende", "page": 1, "x": 40, "y": 334, "size": 10 },
+    { "name": "wechsel_gruende", "type": "textarea", "page": 1, "x": 44, "y": 168, "w": 512, "h": 162, "value_from": "wechsel_gruende" },
+
+    { "type": "label", "text_i18n": "field.ort", "page": 1, "x": 40, "y": 136, "size": 10 },
+    { "name": "stadt", "type": "text", "page": 1, "x": 92, "y": 126, "w": 146, "h": 12, "value_from": "stadt" },
+
+    { "type": "label", "text_i18n": "field.datum", "page": 1, "x": 260, "y": 136, "size": 10 },
+    { "name": "datum", "type": "text", "page": 1, "x": 312, "y": 126, "w": 146, "h": 12, "value_from": "datum" },
+
+    { "type": "label", "text_i18n": "signature.title", "page": 1, "x": 40, "y": 104, "size": 10 },
+    { "name": "signature", "type": "image", "page": 1, "x": 110, "y": 86, "w": 180, "h": 28, "value_from": "signature_bytes" }
   ]
 }

@@ -29,24 +29,21 @@ def validate_required(vals, sc, i18n_dict):
     return errors
 
 def v(sec, key, vals):
-    """Retrieve trimmed value from values dict."""
     return (vals.get(f"{sec}_{key}", "") or "").strip()
 
 def _json_read(path):
-    """Read JSON file safely."""
     try:
         return json.loads(Path(path).read_text(encoding="utf-8"))
     except FileNotFoundError:
         return {}
 
 # ---------- Interactive routing helper ----------
-def build_interactive_pdf_for_form(current, schema, i18n_pdf, pdf_options, form_data):
+def build_interactive_pdf_for_form(current, schema, i18n_pdf, pdf_options, form_data, *, flatten=False):
     """
-    أولوية التنفيذ للتفاعلي:
-      1) interactive_builder خاص بالنموذج: forms/<key>/interactive_builder.py
-         مع دالة: build_pdf_interactive_<key>(data, i18n, pdf_options)
-      2) إن وُجد forms/<key>/layout.json → استعمل المولّد العام modules.pdf_interactive
-      3) خلاف ذلك → لا شيء (ارجع للثابت)
+    الأولوية:
+      1) forms/<key>/interactive_builder.py  → build_pdf_interactive_<key>(data, i18n, pdf_options, flatten=False)
+      2) forms/<key>/layout.json              → modules.pdf_interactive.build_interactive_pdf(...)
+      3) غير ذلك → None
     """
     form_key = current.key
 
@@ -60,9 +57,9 @@ def build_interactive_pdf_for_form(current, schema, i18n_pdf, pdf_options, form_
         func_name = f"build_pdf_interactive_{form_key}"
         if hasattr(mod, func_name):
             fn = getattr(mod, func_name)
-            return fn(data=form_data, i18n=i18n_pdf, pdf_options=pdf_options)
+            return fn(data=form_data, i18n=i18n_pdf, pdf_options=pdf_options, flatten=flatten)
 
-    # 2) Layout.json + generic interactive generator
+    # 2) Layout.json + generic interactive
     layout_json = Path(f"forms/{form_key}/layout.json")
     if layout_json.exists():
         from modules.pdf_interactive import build_interactive_pdf
@@ -72,9 +69,10 @@ def build_interactive_pdf_for_form(current, schema, i18n_pdf, pdf_options, form_
             pdf_options=pdf_options,
             file_title=current.name,
             form_key=form_key,
+            form_data=form_data,
+            flatten=flatten,
         )
 
-    # 3) No interactive option available
     return None
 
 # ---------- Streamlit UI ----------
@@ -101,11 +99,10 @@ ui_i18n = current.i18n
 try:
     pdf_i18n = json.loads(Path(f"forms/{current.key}/i18n.de.json").read_text(encoding="utf-8"))
 except FileNotFoundError:
-    pdf_i18n = ui_i18n  # safe fallback
+    pdf_i18n = ui_i18n
 
-# Current form data
 schema = current.schema
-i18n = ui_i18n  # use UI language for all Streamlit text
+i18n = ui_i18n
 st.title(i18n.get("app.title", current.name))
 
 # Dynamic form UI
@@ -141,8 +138,9 @@ with st.form("dynamic_form"):
             key="datum"
         )
 
-    # خيار إنشاء PDF تفاعلي
+    # خيارات التوليد
     make_interactive = st.checkbox("إنشاء PDF تفاعلي (قابل للملء)", value=False)
+    print_flat = st.checkbox("نسخة للطباعة (مفلطحة بلا تفاعل)", value=False)
 
     submitted = st.form_submit_button(i18n.get("btn.create", "PDF erstellen"))
 
@@ -152,7 +150,6 @@ signature_data = None
 sig_opts = {}
 
 if sig_required:
-    # Draw/upload UI text also uses the UI language
     draw_signature_ui(i18n)
     signature_data = get_signature_bytes()
     meta = get_signature_meta()
@@ -189,9 +186,9 @@ if sig_required:
 
 # Generate PDF
 if submitted:
-    errs = validate_required(values, schema, i18n)  # validate with UI labels
+    errs = validate_required(values, schema, i18n)
     if errs:
-        st.error(i18n.get("validation.required", "Bitte Pflichtfelder ausfühlen.") + "\n- " + "\n- ".join(errs))
+        st.error(i18n.get("validation.required", "Bitte Pflichtfelder ausfüllen.") + "\n- " + "\n- ".join(errs))
     else:
         form_data = {
             **{k: (values.get(k, "") if isinstance(values.get(k), bool) else (str(values.get(k, "") or "").strip()))
@@ -200,7 +197,7 @@ if submitted:
             "datum": (datum or "").strip(),
         }
 
-        # convenience mapped fields (some builders expect these)
+        # convenience mapped fields
         form_data.update({
             "vg_name": v("vg", "name", values),
             "vg_vorname": v("vg", "vorname", values),
@@ -214,19 +211,22 @@ if submitted:
             "person_email": v("person", "email", values),
         })
 
+        if signature_data:
+            form_data["signature_bytes"] = signature_data
+
         base_opts = _json_read("setup-config.json").get("pdf_options", {})
         pdf_options = {**base_opts, **sig_opts}
 
-        # لوضع محتوى PDF بالألمانية دائمًا، مع خيار التفاعل لكل نموذج
-        if make_interactive:
+        if make_interactive or print_flat:
             pdf_bytes = build_interactive_pdf_for_form(
                 current=current,
                 schema=schema,
                 i18n_pdf=pdf_i18n,
                 pdf_options=pdf_options,
                 form_data=form_data,
+                flatten=print_flat,
             )
-            if pdf_bytes is None:  # لا يوجد interactive خاص أو layout.json → الثابت
+            if pdf_bytes is None:
                 pdf_bytes = current.builder.build_pdf(
                     form_data,
                     i18n=pdf_i18n,
@@ -242,7 +242,11 @@ if submitted:
             )
 
         st.success(i18n.get("msg.created", "PDF created."))
-        dl_suffix = "-interactive" if make_interactive else ""
+        dl_suffix = ""
+        if make_interactive:
+            dl_suffix += "-interactive"
+        if print_flat:
+            dl_suffix += "-print"
         dl_name = i18n.get("btn.download", f"{current.key}{dl_suffix}.pdf")
         st.download_button(
             dl_name,
@@ -251,7 +255,6 @@ if submitted:
             mime="application/pdf"
         )
 
-# Safe auto-run with Streamlit
 if __name__ == "__main__":
     if os.environ.get("APP_BOOTSTRAPPED") != "1":
         os.environ["APP_BOOTSTRAPPED"] = "1"
