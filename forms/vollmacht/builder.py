@@ -122,47 +122,7 @@ def build_pdf(
         Spacer(1, 18),
     ]
 
-    sig_block = []
-    if signature_bytes:
-        try:
-            pil = PILImage.open(BytesIO(signature_bytes)).convert("RGBA")
-            if pdf_options.get("signature_trim", True):
-                pil = _trim_whitespace(pil)
 
-            box_w = float(pdf_options.get(
-                "signature_box_w_pt",
-                pdf_options.get("signature_width_pt", 56.7)
-            ))
-            box_h = float(pdf_options.get(
-                "signature_box_h_pt",
-                pdf_options.get("signature_max_height_pt", 85.05)
-            ))
-            mode = pdf_options.get("signature_scale_mode", "fit")
-            align = pdf_options.get("signature_align", "LEFT")
-
-            if mode == "stretch":
-                out_w, out_h = box_w, box_h
-            else:
-                w, h = pil.size
-                aspect = (h / w) if w else 1.0
-                out_w = box_w
-                out_h = out_w * aspect
-                if out_h > box_h:
-                    out_h = box_h
-                    out_w = out_h / aspect
-
-            tmp = BytesIO()
-            pil.save(tmp, format="PNG")
-            tmp.seek(0)
-            sig_img = RLImage(
-                tmp,
-                width=out_w,
-                height=out_h,
-                hAlign=align if align in ("LEFT", "CENTER", "RIGHT") else "LEFT"
-            )
-            sig_block += [sig_img, Spacer(1, -12)]
-        except Exception:
-            pass
 
     sig_block = build_signature_block(
         signature_bytes,
