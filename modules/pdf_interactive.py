@@ -11,9 +11,12 @@ from reportlab.lib import colors
 from reportlab.lib.utils import ImageReader
 from reportlab.platypus import Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
-from PIL import Image as PILImage, ImageChops
+from PIL import Image as PILImage
+
+from modules.image_utils import trim_whitespace  # قص الهوامش الموحّد
 
 FF_MULTILINE = 1 << 12  # 4096
+
 
 def _read_layout(form_key: Optional[str]) -> Optional[Dict[str, Any]]:
     if not form_key:
@@ -26,31 +29,27 @@ def _read_layout(form_key: Optional[str]) -> Optional[Dict[str, Any]]:
             return None
     return None
 
+
 def _label_from_i18n(i18n: Dict[str, str], item: Dict[str, Any], fallback_key: str = "name") -> str:
     return i18n.get(item.get("label_i18n", ""), item.get(fallback_key, ""))
+
 
 def _text_from_i18n(i18n: Dict[str, str], item: Dict[str, Any], key: str = "text", i18n_key: str = "text_i18n") -> str:
     if item.get(i18n_key):
         return i18n.get(item[i18n_key], item.get(key, ""))
     return item.get(key, "")
 
+
 def _booly(x: Any) -> bool:
     s = str(x or "").strip().lower()
     return s in {"1", "true", "y", "yes", "ja", "on", "x", "✓", "checked"}
 
-def _trim_pil(img: PILImage.Image) -> PILImage.Image:
-    if img.mode in ("LA", "RGBA"):
-        bbox = img.split()[-1].getbbox()
-        return img.crop(bbox) if bbox else img
-    rgb = img.convert("RGB")
-    diff = ImageChops.difference(rgb, PILImage.new("RGB", rgb.size, (255, 255, 255)))
-    bbox = diff.getbbox()
-    return img.crop(bbox) if bbox else img
 
 def _fill_box(c: canvas.Canvas, x: float, y: float, w: float, h: float, *, fill_rgb=(1.0, 1.0, 1.0)) -> None:
     c.setFillColorRGB(*fill_rgb)
     c.rect(x, y, w, h, stroke=1, fill=1)
     c.setFillColor(colors.black)
+
 
 def build_interactive_pdf(
     schema: Dict[str, Any],
@@ -83,6 +82,7 @@ def build_interactive_pdf(
     c.save()
     mem.seek(0)
     return mem.read()
+
 
 def _render_by_layout_json(
     c: canvas.Canvas,
@@ -159,7 +159,7 @@ def _render_by_layout_json(
                 try:
                     pil = PILImage.open(BytesIO(raw)).convert("RGBA")
                     if f.get("trim", True):
-                        pil = _trim_pil(pil)
+                        pil = trim_whitespace(pil)
                     mode = (f.get("scale_mode") or "fit").lower()
                     w_box, h_box = w, h
                     w_img, h_img = pil.size
@@ -213,6 +213,11 @@ def _render_by_layout_json(
         # text / textarea
         if flatten:
             val = str(data.get(f.get("value_from") or f.get("name"), f.get("default", "")) or "")
+            styles = getSampleStyleSheet()
+            pstyle = styles["Normal"]
+            pstyle.fontName = "Helvetica"
+            pstyle.fontSize = 10
+            pstyle.leading = 12
             if kind in ("textarea", "multiline"):
                 para = Paragraph(val.replace("\n", "<br/>"), pstyle)
                 para.wrapOn(c, w - 2, h - 2)
@@ -228,15 +233,16 @@ def _render_by_layout_json(
             value_key = f.get("value_from") or f.get("name")
             default_value = f.get("default", "")
             value = str(data.get(value_key, default_value) or "")
-
-            # اجعل خلفية الحقل التفاعلي نفسها بيضاء
             col_tuple = f.get("fill_rgb", layout.get("fill_rgb", (1.0, 1.0, 1.0)))
             fillColor = colors.Color(*col_tuple) if col_tuple else None
 
             c.acroForm.textfield(
                 name=f.get("name"),
                 tooltip=label,
-                x=x, y=y, width=w, height=h,
+                x=x,
+                y=y,
+                width=w,
+                height=h,
                 borderStyle=f.get("borderStyle", "inset"),
                 borderWidth=float(f.get("borderWidth", 0)),
                 forceBorder=bool(f.get("forceBorder", False)),
@@ -246,16 +252,17 @@ def _render_by_layout_json(
                 textColor=colors.black,
             )
 
+
 def _render_auto_layout(
-    c: canvas.Canvas,
-    schema: Dict[str, Any],
-    i18n: Dict[str, str],
-    pdf_options: Dict[str, Any],
-    page_w: float,
-    page_h: float,
-    data: Dict[str, Any],
-    *,
-    flatten: bool = False,
+   c: canvas.Canvas,
+   schema: Dict[str, Any],
+   i18n: Dict[str, str],
+   pdf_options: Dict[str, Any],
+   page_w: float,
+   page_h: float,
+   data: Dict[str, Any],
+   *,
+   flatten: bool = False,
 ) -> None:
     left = float(pdf_options.get("leftMargin", 40))
     right = float(pdf_options.get("rightMargin", 40))
@@ -263,7 +270,6 @@ def _render_auto_layout(
     bottom = float(pdf_options.get("bottomMargin", 36))
     draw_boxes = bool(pdf_options.get("interactive_draw_boxes", True)) and (not flatten)
 
-    # اللون الافتراضي للأوتوماتيك = أبيض
     fill_rgb_opt = pdf_options.get("interactive_fill_rgb", (1.0, 1.0, 1.0))
     auto_fill = colors.Color(*fill_rgb_opt)
 

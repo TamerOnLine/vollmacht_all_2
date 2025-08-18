@@ -8,12 +8,15 @@ from reportlab.lib import colors
 from reportlab.lib.utils import ImageReader
 from reportlab.platypus import Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
-from PIL import Image as PILImage, ImageChops
+from PIL import Image as PILImage
+from modules.image_utils import trim_whitespace   # ✅ التعديل الجديد
 
 FF_MULTILINE = 1 << 12  # 4096
 
+
 def _pt(v: float) -> float:
     return float(v)
+
 
 def _draw_box(c, x, y, w, h, *, fill=None, stroke=1, dash=None):
     if dash:
@@ -27,13 +30,16 @@ def _draw_box(c, x, y, w, h, *, fill=None, stroke=1, dash=None):
     else:
         c.rect(x, y, w, h, stroke=stroke, fill=0)
 
+
 def _text(c, x, y, txt, size=10, bold=False):
     c.setFont("Helvetica-Bold" if bold else "Helvetica", size)
     c.drawString(x, y, txt)
 
+
 def _booly(x: Any) -> bool:
     s = str(x or "").strip().lower()
     return s in {"1", "true", "y", "yes", "ja", "on", "x", "✓", "checked"}
+
 
 def _checkbox_interactive(c, name, tooltip, x, y, size=12, checked=False):
     c.acroForm.checkbox(
@@ -47,6 +53,7 @@ def _checkbox_interactive(c, name, tooltip, x, y, size=12, checked=False):
         checked=bool(checked),
         buttonStyle="check",
     )
+
 
 def _textfield_interactive(c, name, tooltip, x, y, w, h, *, multiline=False, value: str = ""):
     flags = FF_MULTILINE if multiline else 0
@@ -63,19 +70,11 @@ def _textfield_interactive(c, name, tooltip, x, y, w, h, *, multiline=False, val
         textColor=colors.black,
     )
 
-def _trim_pil(img: PILImage.Image) -> PILImage.Image:
-    if img.mode in ("LA", "RGBA"):
-        bbox = img.split()[-1].getbbox()
-        return img.crop(bbox) if bbox else img
-    rgb = img.convert("RGB")
-    diff = ImageChops.difference(rgb, PILImage.new("RGB", rgb.size, (255, 255, 255)))
-    bbox = diff.getbbox()
-    return img.crop(bbox) if bbox else img
 
 def _draw_signature_image(c, raw_bytes: bytes, x: float, y: float, w_box: float, h_box: float, *, trim=True, mode="fit"):
     pil = PILImage.open(BytesIO(raw_bytes)).convert("RGBA")
     if trim:
-        pil = _trim_pil(pil)
+        pil = trim_whitespace(pil)   # ✅ استبدال _trim_pil
     if mode.lower() == "stretch":
         dw, dh = w_box, h_box
     else:
@@ -88,6 +87,7 @@ def _draw_signature_image(c, raw_bytes: bytes, x: float, y: float, w_box: float,
             dw = dh / (aspect or 1)
     img = ImageReader(pil)
     c.drawImage(img, x, y, width=dw, height=dh, mask="auto")
+
 
 def build_pdf_interactive_obdachlosigkeit(
     data: Dict[str, Any] | None,

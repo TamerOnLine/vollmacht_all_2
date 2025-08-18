@@ -2,28 +2,9 @@ from io import BytesIO
 from typing import List
 from reportlab.platypus import Image as RLImage, Spacer, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
-from PIL import Image as PILImage, ImageChops
+from PIL import Image as PILImage
+from modules.image_utils import trim_whitespace
 
-def _trim_whitespace(img: PILImage.Image) -> PILImage.Image:
-    """
-    Trim white or transparent space around the image.
-
-    Args:
-        img (PILImage.Image): The input image.
-
-    Returns:
-        PILImage.Image: Cropped image with whitespace removed.
-    """
-    if img.mode in ("LA", "RGBA"):
-        alpha = img.split()[-1]
-        bbox = alpha.getbbox()
-        return img.crop(bbox) if bbox else img
-
-    rgb = img.convert("RGB")
-    bg = PILImage.new("RGB", rgb.size, (255, 255, 255))
-    diff = ImageChops.difference(rgb, bg)
-    bbox = diff.getbbox()
-    return img.crop(bbox) if bbox else img
 
 def build_signature_block(
     signature_bytes: bytes | None,
@@ -49,7 +30,7 @@ def build_signature_block(
         try:
             pil = PILImage.open(BytesIO(signature_bytes)).convert("RGBA")
             if bool(pdf_options.get("signature_trim", True)):
-                pil = _trim_whitespace(pil)
+                pil = trim_whitespace(pil)
 
             box_w = float(
                 pdf_options.get("signature_box_w_pt",
