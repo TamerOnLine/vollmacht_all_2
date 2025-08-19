@@ -72,7 +72,12 @@ def draw_signature_ui(i18n: dict) -> None:
     upload_label = i18n.get("signature.mode.upload", "Upload image")
 
     st.subheader(i18n.get("signature.title", "Unterschrift"))
-    sig_mode = st.radio("", [draw_label, upload_label], horizontal=True)
+    sig_mode = st.radio(
+        "Signature mode",
+        [draw_label, upload_label],
+        horizontal=True,
+        label_visibility="collapsed"
+        )
 
     if sig_mode == draw_label:
         canvas_result = st_canvas(
